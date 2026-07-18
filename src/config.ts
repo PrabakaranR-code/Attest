@@ -15,6 +15,8 @@ export interface Config {
   chromiumPath: string | undefined;
   /** Serialized adblock engine cache file. */
   listCachePath: string;
+  /** Allow http(s) URLs to loopback/private ranges (tests, trusted intranets). */
+  allowPrivateUrls: boolean;
 }
 
 function intEnv(env: NodeJS.ProcessEnv, name: string, fallback: number): number {
@@ -37,5 +39,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     maxCapturesPerBrowser: intEnv(env, 'MAX_CAPTURES_PER_BROWSER', 50),
     chromiumPath: env.ATTEST_CHROMIUM_PATH || undefined,
     listCachePath: env.ATTEST_LIST_CACHE || join(PACKAGE_ROOT, '.list-cache', 'adblock-engine.bin'),
+    allowPrivateUrls: env.ATTEST_ALLOW_PRIVATE === '1' || env.ATTEST_ALLOW_PRIVATE === 'true',
   };
 }
