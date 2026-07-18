@@ -17,6 +17,8 @@ export interface Config {
   listCachePath: string;
   /** Allow http(s) URLs to loopback/private ranges (tests, trusted intranets). */
   allowPrivateUrls: boolean;
+  /** RSS limit in MB before the browser is recycled; 0 disables the guard. */
+  maxRssMb: number;
 }
 
 function intEnv(env: NodeJS.ProcessEnv, name: string, fallback: number): number {
@@ -40,5 +42,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     chromiumPath: env.ATTEST_CHROMIUM_PATH || undefined,
     listCachePath: env.ATTEST_LIST_CACHE || join(PACKAGE_ROOT, '.list-cache', 'adblock-engine.bin'),
     allowPrivateUrls: env.ATTEST_ALLOW_PRIVATE === '1' || env.ATTEST_ALLOW_PRIVATE === 'true',
+    maxRssMb: env.ATTEST_MAX_RSS_MB === '0' ? 0 : intEnv(env, 'ATTEST_MAX_RSS_MB', 1024),
   };
 }

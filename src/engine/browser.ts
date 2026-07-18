@@ -56,6 +56,14 @@ export class BrowserManager {
     return this.browser?.isConnected() ?? false;
   }
 
+  /** Close the current browser; the next capture relaunches a fresh one. */
+  async forceRecycle(): Promise<void> {
+    const browser = this.browser;
+    this.browser = null;
+    this.captures = 0;
+    await browser?.close().catch(() => {});
+  }
+
   async close(): Promise<void> {
     await this.browser?.close().catch(() => {});
     this.browser = null;

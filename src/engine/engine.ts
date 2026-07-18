@@ -9,6 +9,7 @@ import { loadBlocker } from './blocker.js';
 import { BrowserManager } from './browser.js';
 import { capturePage } from './capture.js';
 import type { WaitStrategy } from './capture.js';
+import { MemoryGuard } from './memguard.js';
 import { CaptureQueue } from './queue.js';
 
 export interface CaptureRequest {
@@ -40,6 +41,7 @@ export class AttestEngine {
     private readonly blocker: PlaywrightBlocker,
     private readonly browsers: BrowserManager,
     private readonly queue: CaptureQueue,
+    private readonly memguard: MemoryGuard,
   ) {}
 
   static async create(config: Config): Promise<AttestEngine> {
@@ -51,7 +53,9 @@ export class AttestEngine {
       maxCapturesPerBrowser: config.maxCapturesPerBrowser,
     });
     const queue = new CaptureQueue(config.maxConcurrency);
-    return new AttestEngine(config, keys, blocker, browsers, queue);
+    const memguard = new MemoryGuard(config.maxRssMb, () => browsers.forceRecycle());
+    memguard.start();
+    return new AttestEngine(config, keys, blocker, browsers, queue, memguard);
   }
 
   async capture(req: CaptureRequest): Promise<EngineResponse> {
@@ -123,6 +127,7 @@ export class AttestEngine {
   }
 
   async close(): Promise<void> {
+    this.memguard.stop();
     await this.browsers.close();
   }
 }
