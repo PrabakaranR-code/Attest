@@ -4,10 +4,12 @@ import { buildServer } from './api/server.js';
 import { loadConfig } from './config.js';
 import { AttestEngine } from './engine/engine.js';
 import { log } from './log.js';
+import { mountMcp } from './mcp/server.js';
 
 const config = loadConfig();
 const engine = await AttestEngine.create(config);
 const app = buildServer(engine, config);
+mountMcp(app, engine, config);
 
 await app.listen({ port: config.port, host: config.host });
 log.info('attest: listening', { port: config.port, host: config.host });
