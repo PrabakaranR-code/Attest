@@ -1,15 +1,17 @@
 # Attest — stateless verified web capture engine.
 # linux/amd64 + linux/arm64 friendly (Playwright ships Chromium for both).
-FROM node:20-bookworm-slim AS build
+# BASE_IMAGE can point at a Docker Hub mirror (e.g. mirror.gcr.io/library/node:20-bookworm-slim).
+ARG BASE_IMAGE=node:20-bookworm-slim
+
+FROM ${BASE_IMAGE} AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-RUN npm ci
+RUN PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci
 COPY tsconfig.json tsconfig.build.json ./
 COPY src ./src
 RUN npm run build
 
-FROM node:20-bookworm-slim
+FROM ${BASE_IMAGE}
 ENV NODE_ENV=production \
     PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers \
     ATTEST_KEY_DIR=/data/keys \
@@ -17,7 +19,7 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev && npm cache clean --force
 RUN npx playwright install --with-deps chromium && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/dist ./dist
 COPY .list-cache ./.list-cache
